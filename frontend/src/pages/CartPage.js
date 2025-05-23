@@ -1,5 +1,6 @@
+// frontend/src/pages/CartPage.js
 import React, { useState, useEffect, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom'; // For redirecting after successful purchase
+import { useNavigate } from 'react-router-dom';
 import CartService from '../services/cart.service';
 import LoadingSpinner from '../components/UI/LoadingSpinner';
 import Notification from '../components/UI/Notification';
@@ -9,30 +10,37 @@ import Button from '../components/UI/Button';
 const CartPage = () => {
   const [cartItems, setCartItems] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [paying, setPaying] = useState(false); // Specific loading state for payment
+  const [paying, setPaying] = useState(false);
   const [error, setError] = useState('');
-  const [payFeedback, setPayFeedback] = useState({ message: '', type: '' }); // For payment specific messages
+  const [payFeedback, setPayFeedback] = useState({ message: '', type: '' });
   const navigate = useNavigate();
 
-  const fetchCartItems = useCallback(async (showLoading = true) => {
+  const fetchCartItems = useCallback(async (showLoadingSpinner = true) => {
     try {
-      if (showLoading) setLoading(true);
+      if (showLoadingSpinner) setLoading(true);
       setError('');
+      setPayFeedback({ message: '', type: '' });
+
       const response = await CartService.getCartItems();
-      // Attach originalPrice for frontend display if price changes (Req 12a)
-      // This is illustrative, as backend checkout handles final checks.
-      const itemsWithDisplayPrice = response.data.map(ci => ({
-        ...ci,
-        displayPrice: parseFloat(ci.item_details.price).toFixed(2), // Store current price for UI
-        hasIssue: false, // For highlighting items with issues
-        issueMessage: ''
-      }));
-      setCartItems(itemsWithDisplayPrice);
+      const itemsWithDisplayInfo = response.data.map(ci => {
+        const itemPrice = ci.item_details && ci.item_details.price !== null && ci.item_details.price !== undefined
+                           ? parseFloat(ci.item_details.price).toFixed(2)
+                           : '0.00';
+        return {
+          ...ci,
+          originalFetchedPrice: itemPrice,
+          displayPrice: itemPrice,
+          hasIssue: false,
+          issueMessage: ''
+        };
+      });
+      setCartItems(itemsWithDisplayInfo);
     } catch (err) {
       const errorMessage = err.response?.data?.detail || err.message || 'Failed to fetch cart items.';
       setError(errorMessage);
+      setCartItems([]);
     } finally {
-      if (showLoading) setLoading(false);
+      if (showLoadingSpinner) setLoading(false);
     }
   }, []);
 
@@ -41,47 +49,78 @@ const CartPage = () => {
   }, [fetchCartItems]);
 
   const handleRemoveItem = async (cartItemId) => {
+    setError('');
+    setPayFeedback({ message: '', type: '' });
     try {
-      setPayFeedback({ message: '', type: '' }); // Clear pay feedback
       await CartService.removeItemFromCart(cartItemId);
-      // Re-fetch cart items to update list and total, without full page loading spinner
-      fetchCartItems(false);
+      setCartItems(prevItems => {
+        const newItems = prevItems.filter(item => item.id !== cartItemId);
+        // If removing an item that had an issue, and it's the only one with an issue,
+        // clear the general payFeedback error that might have been set.
+        const remainingIssues = newItems.some(item => item.hasIssue);
+        if (!remainingIssues && payFeedback.type === 'error' && payFeedback.message.includes("review item issues")) {
+            setPayFeedback({ message: '', type: '' });
+        }
+        return newItems;
+      });
     } catch (err) {
-      setError(err.response?.data?.detail || err.message || 'Failed to remove item.');
+      setError(err.response?.data?.detail || err.message || 'Failed to remove item from cart.');
     }
   };
 
   const handlePay = async () => {
     setPaying(true);
     setPayFeedback({ message: '', type: '' });
-    setError(''); // Clear general errors
+    setError('');
+
+    // Before calling backend, clear previous issue flags on cart items in frontend state
+    setCartItems(prevItems => prevItems.map(item => ({ ...item, hasIssue: false, issueMessage: '' })));
 
     try {
       const response = await CartService.checkoutCart();
       setPayFeedback({ message: response.data.detail, type: 'success' });
-      // Cart is now empty on backend, fetch to reflect this
-      // setCartItems([]); // Optimistic update
-      fetchCartItems(false);
-      setTimeout(() => navigate('/my-purchases'), 3000); // Redirect to purchases
+      setCartItems([]);
+      setTimeout(() => navigate('/my-purchases'), 3000);
     } catch (err) {
       const errData = err.response?.data;
-      if (errData && errData.issues) {
-        // Req 12a, 12b: Issues found, transaction halted
-        setPayFeedback({ message: errData.detail || "Please resolve item issues.", type: 'error' });
-        // Update cartItems to show notifications next to problematic items
+      if (errData && errData.issues && Array.isArray(errData.issues)) {
+        setPayFeedback({
+            message: errData.detail || "Please review item issues before proceeding.",
+            type: 'error'
+        });
+
+        const issuesMap = new Map();
+        errData.issues.forEach(iss => {
+            // Use cart_item_id if available, otherwise item_id as a fallback key
+            const key = iss.cart_item_id || (iss.item_id ? `item-${iss.item_id}` : null);
+            if (key) issuesMap.set(key, iss);
+        });
+
         const updatedCartItems = cartItems.map(ci => {
-          const issue = errData.issues.find(iss => iss.cart_item_id === ci.id || iss.item_id === ci.item_details.id);
-          if (issue) {
-            return { ...ci, hasIssue: true, issueMessage: issue.message,
-                     // If price changed, backend should send new price to update `displayPrice`
-                     // displayPrice: issue.new_price ? parseFloat(issue.new_price).toFixed(2) : ci.displayPrice
-                   };
+          const issueDetail = issuesMap.get(ci.id) || issuesMap.get(`item-${ci.item_details?.id}`);
+
+          if (issueDetail) {
+            const newDisplayPrice = issueDetail.issue === 'price_changed' && issueDetail.current_price
+                                     ? parseFloat(issueDetail.current_price).toFixed(2)
+                                     : ci.displayPrice; // Keep current display price if not a price change issue
+            return {
+              ...ci,
+              hasIssue: true,
+              issueMessage: issueDetail.message,
+              displayPrice: newDisplayPrice,
+              item_details: {
+                ...ci.item_details,
+                price: newDisplayPrice, // Update underlying item_details.price as well
+                status: issueDetail.issue === 'not_available' ? 'sold' : ci.item_details.status
+              }
+            };
           }
-          return { ...ci, hasIssue: false, issueMessage: '' }; // Clear previous issues
+          return ci; // No issue for this item, return as is
         });
         setCartItems(updatedCartItems);
+
       } else {
-        setPayFeedback({ message: errData?.detail || err.message || 'Payment failed.', type: 'error' });
+        setPayFeedback({ message: errData?.detail || err.message || 'Payment failed. Please try again.', type: 'error' });
       }
     } finally {
       setPaying(false);
@@ -89,10 +128,13 @@ const CartPage = () => {
   };
 
   const calculateTotal = () => {
-    return cartItems.reduce((total, cartItem) => total + parseFloat(cartItem.displayPrice || cartItem.item_details.price), 0).toFixed(2);
+    return cartItems.reduce((total, cartItem) => {
+        const priceToUse = cartItem.displayPrice ? parseFloat(cartItem.displayPrice) : (cartItem.item_details && cartItem.item_details.price ? parseFloat(cartItem.item_details.price) : 0);
+        return total + priceToUse;
+    }, 0).toFixed(2);
   };
 
-  if (loading) return <LoadingSpinner />;
+  if (loading && !paying) return <LoadingSpinner />;
 
   return (
     <div>
@@ -105,17 +147,13 @@ const CartPage = () => {
       ) : (
         <>
           {cartItems.map(cartItem => (
-            <div key={cartItem.id}>
-              <CartItem
-                cartItemData={cartItem}
-                onRemove={() => handleRemoveItem(cartItem.id)}
-              />
-              {cartItem.hasIssue && (
-                <Notification message={cartItem.issueMessage} type="warning" style={{fontSize: '0.8em', padding: '5px'}} />
-              )}
-            </div>
+            <CartItem
+              key={cartItem.id}
+              cartItemData={cartItem}
+              onRemove={() => handleRemoveItem(cartItem.id)}
+            />
           ))}
-          <hr />
+          <hr style={{ margin: '20px 0' }}/>
           <div style={{ textAlign: 'right', marginTop: '20px' }}>
             <h3>Total: ${calculateTotal()}</h3>
             <Button onClick={handlePay} className="ui-button" disabled={cartItems.length === 0 || paying}>

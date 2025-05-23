@@ -1,3 +1,4 @@
+# backend/api/views.py
 from django.contrib.auth.models import User
 from django.http import HttpResponseRedirect
 from django.urls import reverse
@@ -37,18 +38,14 @@ class ChangePasswordView(generics.GenericAPIView):
     def post(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data, context={'request': request})
         serializer.is_valid(raise_exception=True)
-
         user = request.user
         old_password = serializer.validated_data.get('old_password')
         new_password = serializer.validated_data.get('new_password')
-
         if not user.check_password(old_password):
             return Response({"old_password": ["Wrong password."]}, status=status.HTTP_400_BAD_REQUEST)
-
         if old_password == new_password:
             return Response({"new_password": ["New password cannot be the same as the old password."]},
                             status=status.HTTP_400_BAD_REQUEST)
-
         user.set_password(new_password)
         user.save()
         return Response({"detail": "Password updated successfully. Please log in again."}, status=status.HTTP_200_OK)
@@ -105,8 +102,8 @@ class CartItemViewSet(viewsets.ModelViewSet):
     http_method_names = ['get', 'post', 'delete', 'head', 'options']
 
     def get_queryset(self):
-        return CartItem.objects.filter(user=self.request.user).select_related('item', 'item__seller').order_by(
-            '-added_at')
+        return CartItem.objects.filter(user=self.request.user).select_related('item', 'item__seller',
+                                                                              'item__buyer').order_by('-added_at')
 
     def perform_create(self, serializer):
         item_instance = serializer.validated_data['item']
@@ -116,6 +113,7 @@ class CartItemViewSet(viewsets.ModelViewSet):
             raise DRFValidationError({"detail": "This item is not available for sale."})
         if CartItem.objects.filter(user=self.request.user, item=item_instance).exists():
             raise DRFValidationError({"detail": "This item is already in your cart."})
+        # CartItem model's save() method will set price_at_add
         serializer.save(user=self.request.user)
 
     @action(detail=False, methods=['post'], url_path='checkout')
@@ -123,41 +121,83 @@ class CartItemViewSet(viewsets.ModelViewSet):
         user_cart_items = CartItem.objects.filter(user=request.user).select_related('item')
         if not user_cart_items.exists():
             return Response({"detail": "Your cart is empty."}, status=status.HTTP_400_BAD_REQUEST)
+
         items_with_issues = []
         items_to_purchase_db_instances = []
+
         for cart_item_obj in user_cart_items:
             try:
                 db_item = Item.objects.get(pk=cart_item_obj.item.pk)
             except Item.DoesNotExist:
-                items_with_issues.append({"cart_item_id": cart_item_obj.id, "item_id": cart_item_obj.item.pk,
-                                          "title": getattr(cart_item_obj.item, 'title', 'Unknown Item'),
-                                          "issue": "item_not_found", "message": "Item no longer exists."})
+                items_with_issues.append({
+                    "cart_item_id": cart_item_obj.id, "item_id": cart_item_obj.item.pk,
+                    "title": getattr(cart_item_obj.item, 'title', 'Unknown Item'),
+                    "issue": "item_not_found", "message": "Item no longer exists."
+                })
                 continue
+
             if db_item.status != 'on-sale':
-                items_with_issues.append(
-                    {"cart_item_id": cart_item_obj.id, "item_id": db_item.id, "title": db_item.title,
-                     "issue": "not_available", "message": f"Item '{db_item.title}' is no longer available."})
+                items_with_issues.append({
+                    "cart_item_id": cart_item_obj.id, "item_id": db_item.id, "title": db_item.title,
+                    "issue": "not_available",
+                    "message": f"Item '{db_item.title}' is no longer available for sale.",
+                    "current_price": str(db_item.price)
+                })
                 continue
+
+            if cart_item_obj.price_at_add is None:
+                items_with_issues.append({
+                    "cart_item_id": cart_item_obj.id, "item_id": db_item.id, "title": db_item.title,
+                    "issue": "internal_error",
+                    "message": f"Could not verify original price for '{db_item.title}'. Please remove and re-add the item to your cart.",
+                    "current_price": str(db_item.price)
+                })
+                continue
+            elif db_item.price != cart_item_obj.price_at_add:
+                items_with_issues.append({
+                    "cart_item_id": cart_item_obj.id, "item_id": db_item.id, "title": db_item.title,
+                    "issue": "price_changed",
+                    "message": f"The price for '{db_item.title}' has changed from ${cart_item_obj.price_at_add} to ${db_item.price}. To buy the item, remove it and add it to the cart again!",
+                    "current_price": str(db_item.price),
+                    "old_price": str(cart_item_obj.price_at_add)
+                })
+                continue
+
             items_to_purchase_db_instances.append(db_item)
+
         if items_with_issues:
-            return Response({"detail": "Transaction halted. Please review your cart.", "issues": items_with_issues},
-                            status=status.HTTP_400_BAD_REQUEST)
+            return Response({
+                "detail": "Transaction halted. Please review your cart for issues.",
+                "issues": items_with_issues
+            }, status=status.HTTP_400_BAD_REQUEST)
+
         try:
             with transaction.atomic():
-                for item_to_sell in items_to_purchase_db_instances:
-                    locked_item = Item.objects.select_for_update().get(pk=item_to_sell.pk)
-                    if locked_item.status != 'on-sale':
-                        raise DRFValidationError(f"Item '{locked_item.title}' became unavailable during transaction.")
-                    locked_item.status = 'sold'
-                    locked_item.buyer = request.user
-                    locked_item.save()
-                user_cart_items.delete()
+                item_ids_to_purchase = [item.pk for item in items_to_purchase_db_instances]
+                locked_items_for_purchase = Item.objects.select_for_update().filter(pk__in=item_ids_to_purchase)
+
+                if len(locked_items_for_purchase) != len(item_ids_to_purchase):
+                    raise DRFValidationError(
+                        "Some items became unavailable during final processing. Please refresh your cart and try again.")
+
+                for item_to_sell in locked_items_for_purchase:
+                    if item_to_sell.status != 'on-sale':
+                        raise DRFValidationError(
+                            f"Item '{item_to_sell.title}' became unavailable during the transaction process.")
+
+                    item_to_sell.status = 'sold'
+                    item_to_sell.buyer = request.user
+                    item_to_sell.save()
+
+                CartItem.objects.filter(user=request.user, item__pk__in=item_ids_to_purchase).delete()
+
         except DRFValidationError as e:
             return Response({"detail": str(e)}, status=status.HTTP_409_CONFLICT)
         except Exception as e:
-            return Response({"detail": "An unexpected error occurred during checkout."},
+            return Response({"detail": "An unexpected error occurred during checkout. Please try again later."},
                             status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-        return Response({"detail": "Purchase successful! Items have been processed."}, status=status.HTTP_200_OK)
+
+        return Response({"detail": "Purchase successful! Your items have been processed."}, status=status.HTTP_200_OK)
 
 
 def populate_db_view(request):

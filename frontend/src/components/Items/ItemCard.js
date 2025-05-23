@@ -55,7 +55,7 @@ const ItemCard = ({ item }) => {
         <h3 style={{ marginTop: '0', marginBottom: '10px', fontSize: '1.25rem', color: '#2D2D2D' }}>
           {item?.title || 'No Title'}
           {item && item.status === 'sold' && (
-            <span style={{ fontSize: '0.8rem', color: 'red', marginLeft: '10px', fontWeight: 'bold', textTransform: 'uppercase' }}>(Purchased)</span>
+            <span style={{ fontSize: '0.8rem', color: 'red', marginLeft: '10px', fontWeight: 'bold', textTransform: 'uppercase' }}>(Sold)</span>
           )}
         </h3>
         <p style={{ fontSize: '0.9em', color: '#555555', minHeight: '60px', marginBottom: '10px', overflow: 'hidden', textOverflow: 'ellipsis', display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical' }}>

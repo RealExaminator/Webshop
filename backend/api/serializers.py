@@ -1,3 +1,4 @@
+# backend/api/serializers.py
 from django.contrib.auth.models import User
 from rest_framework import serializers
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer as DefaultTokenObtainPairSerializer
@@ -47,10 +48,12 @@ class ItemSerializer(serializers.ModelSerializer):
 class CartItemSerializer(serializers.ModelSerializer):
     item_details = ItemSerializer(source='item', read_only=True)
     item = serializers.PrimaryKeyRelatedField(queryset=Item.objects.all(), write_only=True)
+    price_at_add = serializers.DecimalField(max_digits=10, decimal_places=2, read_only=True) # For display via API
+
     class Meta:
         model = CartItem
-        fields = ('id', 'user', 'item', 'item_details', 'added_at')
-        read_only_fields = ('id', 'user', 'item_details', 'added_at')
+        fields = ('id', 'user', 'item', 'item_details', 'added_at', 'price_at_add')
+        read_only_fields = ('id', 'user', 'item_details', 'added_at', 'price_at_add')
 
 class ChangePasswordSerializer(serializers.Serializer):
     old_password = serializers.CharField(required=True, write_only=True, style={'input_type': 'password'})
