@@ -1,0 +1,8 @@
+/* frontend/src/components/Items/ItemList.css */
+.item-list-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px; /* You found 15px or 20px worked for layout */
+  justify-content: flex-start; /* Or center if you prefer */
+  padding-top: 10px; /* Add some padding above the items */
+}

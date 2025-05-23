@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebShop - Landing</title>
+    <style>
+        body { font-family: sans-serif; margin: 20px; background-color: #f4f4f4; color: #333; }
+        .container { background-color: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+        h1 { color: #333; }
+        a { color: #007bff; text-decoration: none; }
+        a:hover { text-decoration: underline; }
+        .button {
+            display: inline-block;
+            background-color: #007bff;
+            color: white;
+            padding: 10px 15px;
+            border-radius: 5px;
+            text-align: center;
+            margin: 10px 0;
+            border: none;
+            cursor: pointer;
+        }
+        .button:hover { background-color: #0056b3; }
+        .message {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+        }
+        .success { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb;}
+        .info { background-color: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb;}
+        .django-admin-link { margin-top: 20px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Welcome to the WebShop Project!</h1>
+
+        <p>This is the Django-served landing page.</p>
+
+        <form action="{% url 'populate-db' %}" method="post">
+            {% csrf_token %}
+            <button type="submit" class="button">Automatically Populate/Re-populate Database</button>
+        </form>
+        <p><small>This will clear existing users (except superusers) and items, then generate 6 users (testuser1-6, pass1-6) and 30 items (10 items each for testuser1-3).</small></p>
+
+        {% if message %}
+            <div class="message success">
+                <strong>{{ message }}</strong>
+            </div>
+        {% endif %}
+
+        <h2>Access the Shop:</h2>
+        <p>The main shop interface is a React Single Page Application.</p>
+        <a href="{{ react_app_url }}" class="button" target="_blank">Go to Shop (React App)</a>
+        <p><small>(Ensure your React development server is running, usually on <a href="{{ react_app_url }}">{{ react_app_url }}</a>)</small></p>
+
+        <div class="django-admin-link">
+            <p>You can also manage data via the <a href="{% url 'admin:index' %}">Django Admin Interface</a> (requires superuser login).</p>
+        </div>
+    </div>
+</body>
+</html>

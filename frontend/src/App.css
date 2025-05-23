@@ -1,38 +1,154 @@
-.App {
-  text-align: center;
-}
-
-.App-logo {
-  height: 40vmin;
-  pointer-events: none;
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  .App-logo {
-    animation: App-logo-spin infinite 20s linear;
-  }
-}
-
-.App-header {
-  background-color: #282c34;
-  min-height: 100vh;
+/* frontend/src/App.css */
+.app-container {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  font-size: calc(10px + 2vmin);
+  min-height: 100vh;
+}
+
+.main-content {
+  flex-grow: 1;
+  padding: 25px 40px; /* Slightly more padding */
+  max-width: 1200px;
+  margin: 25px auto; /* Margin around the content */
+  width: 100%;
+  background-color: #FAFAFA;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08); /* Softer, more modern shadow */
+}
+
+/* UI Button Styles - Grey and Orange Theme */
+.ui-button {
+  padding: 10px 20px; /* Slightly more padding */
+  border: none;
+  border-radius: 5px; /* Slightly more rounded */
+  background-color: #FF6600; /* Primary Orange */
   color: white;
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: bold; /* Make button text bolder */
+  transition: background-color 0.2s ease-in-out, transform 0.1s ease; /* Added transform */
+  text-transform: uppercase; /* Uppercase button text */
+  letter-spacing: 0.5px; /* Slight letter spacing */
+}
+.ui-button:hover {
+  background-color: #E65C00; /* Darker Orange on hover */
+  transform: translateY(-1px); /* Slight lift on hover */
+  box-shadow: 0 2px 5px rgba(0,0,0,0.15);
+}
+.ui-button:active {
+    transform: translateY(0px); /* Press down effect */
+    box-shadow: 0 1px 2px rgba(0,0,0,0.15);
+}
+.ui-button:disabled {
+  background-color: #AAAAAA; /* Medium Grey for disabled */
+  color: #666666;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
 }
 
-.App-link {
-  color: #61dafb;
+/* UI Input Styles - Grey and Orange Theme */
+.ui-input {
+  padding: 12px 15px; /* More padding */
+  border: 1px solid #D0D0D0; /* Lighter grey border */
+  border-radius: 5px;
+  font-size: 1rem;
+  margin-bottom: 10px;
+  width: 100%;
+  transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+}
+.ui-input:focus {
+  outline: none;
+  border-color: #FF6600; /* Orange border on focus */
+  box-shadow: 0 0 0 2px rgba(255, 102, 0, 0.2); /* Orange glow on focus */
 }
 
-@keyframes App-logo-spin {
-  from {
+/* Textarea specific styling (if needed, often .ui-input works fine) */
+textarea.ui-input {
+    min-height: 80px; /* Give textareas a bit more default height */
+    resize: vertical; /* Allow vertical resizing */
+}
+
+
+/* Loading Spinner - Orange to match theme */
+.spinner {
+  border: 4px solid rgba(0, 0, 0, 0.1); /* Light grey track */
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border-left-color: #FF6600; /* Orange spinner arc */
+  animation: spin 1s linear infinite; /* Linear animation for smoother spin */
+  margin: 20px auto;
+}
+@keyframes spin {
+  0% {
     transform: rotate(0deg);
   }
-  to {
+  100% {
     transform: rotate(360deg);
   }
 }
+
+/* Notification Styles - Keep these distinct for clarity */
+.notification {
+  padding: 15px;
+  margin-bottom: 20px;
+  border: 1px solid transparent;
+  border-radius: 6px; /* Slightly more rounded */
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+.notification.info {
+  color: #004085;
+  background-color: #cce5ff;
+  border-color: #b8daff;
+}
+.notification.success {
+  color: #155724;
+  background-color: #d4edda;
+  border-color: #c3e6cb;
+}
+.notification.error {
+  color: #721c24;
+  background-color: #f8d7da;
+  border-color: #f5c6cb;
+}
+.notification.warning {
+  color: #856404;
+  background-color: #fff3cd;
+  border-color: #ffeeba;
+}
+.notification button { /* Style for the close button if you add one */
+    background: transparent;
+    border: none;
+    color: inherit; /* Inherit color from notification type */
+    opacity: 0.7;
+    cursor: pointer;
+    font-size: 1.2rem;
+    padding: 0 5px;
+}
+.notification button:hover {
+    opacity: 1;
+}
+
+/* Link styles - make them orange */
+a {
+  color: #F27405; /* A slightly deeper orange for links */
+  text-decoration: none;
+  transition: color 0.2s ease-in-out;
+}
+a:hover {
+  color: #CC5500; /* Darker orange on hover */
+  text-decoration: underline;
+}
+
+h1, h2, h3, h4, h5, h6 {
+    color: #2D2D2D; /* Darker grey for headings for better contrast */
+    margin-top: 1.5em; /* Add some top margin to headings */
+    margin-bottom: 0.75em;
+}
+h1 { font-size: 2.2rem; }
+h2 { font-size: 1.8rem; }
+h3 { font-size: 1.5rem; }
