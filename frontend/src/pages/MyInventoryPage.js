@@ -1,11 +1,10 @@
-// frontend/src/pages/MyInventoryPage.js
 import React, { useState, useEffect, useCallback } from 'react';
 import ItemService from '../services/item.service';
 import LoadingSpinner from '../components/UI/LoadingSpinner';
 import Notification from '../components/UI/Notification';
-// We will display items directly here instead of a generic ItemList for edit functionality
 import Button from '../components/UI/Button';
 import Input from '../components/UI/Input';
+import ProductImage from '../components/Items/ProductImage';
 
 const MyInventoryPage = () => {
   const [onSaleItems, setOnSaleItems] = useState([]);
@@ -72,67 +71,86 @@ const MyInventoryPage = () => {
   };
 
   const renderItemCard = (item) => (
-    <div key={item.id} style={{ border: '1px solid #eee', padding: '15px', margin: '10px 0', borderRadius: '8px', backgroundColor: '#fff' }}>
-      <h4>{item.title}</h4>
-      <p>Current Price: ${parseFloat(item.price).toFixed(2)}</p>
-      <p>Status: <span style={{ fontWeight: 'bold', color: item.status === 'on-sale' ? 'green' : 'red' }}>{item.status.replace('-', ' ')}</span></p>
-      <p><small>Added: {new Date(item.date_added).toLocaleDateString()}</small></p>
+    <article key={item.id} className="inventory-card">
+      <div className="inventory-card-top">
+        <ProductImage item={item} thumb />
+        <div>
+          <h4>{item.title}</h4>
+          <p>Current Price: ${parseFloat(item.price).toFixed(2)}</p>
+          <p>Status: <span className={`status-pill ${item.status === 'on-sale' ? 'status-pill--sale' : 'status-pill--sold'}`}>{item.status.replace('-', ' ')}</span></p>
+          <p><small>Added: {new Date(item.date_added).toLocaleDateString()}</small></p>
+        </div>
+      </div>
       {item.status === 'sold' && item.buyer_username && (
         <p><small>Sold to: {item.buyer_username}</small></p>
       )}
 
       {item.status === 'on-sale' && (
         editItemId === item.id ? (
-          <div style={{ marginTop: '10px', borderTop: '1px dashed #ccc', paddingTop: '10px' }}>
+          <div className="price-editor">
             <h5>Edit Price</h5>
             {editError && <Notification message={editError} type="error" onClose={() => setEditError('')} />}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <div className="price-editor-row">
               <Input
                 type="number"
                 value={newPrice}
                 onChange={(e) => setNewPrice(e.target.value)}
                 min="0.01"
                 step="0.01"
-                style={{width: '100px'}}
+                aria-label="New price"
               />
-              <Button onClick={() => handleSavePrice(item.id)} className="ui-button" style={{backgroundColor: '#28a745'}}>Save</Button>
-              <Button onClick={handleCancelEdit} className="ui-button" style={{backgroundColor: '#6c757d'}}>Cancel</Button>
+              <Button onClick={() => handleSavePrice(item.id)} className="ui-button--good">Save</Button>
+              <Button onClick={handleCancelEdit} className="ui-button--muted">Cancel</Button>
             </div>
           </div>
         ) : (
-          <Button onClick={() => handleEditPriceClick(item)} className="ui-button" style={{ marginTop: '10px' }}>
+          <Button onClick={() => handleEditPriceClick(item)} className="ui-button--outline">
             Edit Price
           </Button>
         )
       )}
-    </div>
+    </article>
   );
 
   if (loading) return <LoadingSpinner />;
 
   return (
-    <div>
-      <h2>My Inventory</h2>
+    <div className="page">
+      <header className="page-header">
+        <h2>My Inventory</h2>
+      </header>
       {error && <Notification message={error} type="error" onClose={() => setError('')} />}
       {editSuccess && <Notification message={editSuccess} type="success" onClose={() => setEditSuccess('')} />}
 
-      <section>
+      <section className="inventory-section">
         <h3>Items Currently For Sale</h3>
         {onSaleItems.length > 0 ? (
-          onSaleItems.map(item => renderItemCard(item))
+          <div className="inventory-list">
+            {onSaleItems.map(item => renderItemCard(item))}
+          </div>
         ) : (
-          !error && <p>You have no items currently listed for sale.</p>
+          !error && (
+            <div className="empty-state">
+              <p>You have no items currently listed for sale.</p>
+            </div>
+          )
         )}
       </section>
 
-      <hr style={{ margin: "30px 0" }} />
+      <hr className="section-rule" />
 
-      <section>
+      <section className="inventory-section">
         <h3>Sold Items</h3>
         {soldItems.length > 0 ? (
-          soldItems.map(item => renderItemCard(item))
+          <div className="inventory-list">
+            {soldItems.map(item => renderItemCard(item))}
+          </div>
         ) : (
-          !error && <p>You have not sold any items yet.</p>
+          !error && (
+            <div className="empty-state">
+              <p>You have not sold any items yet.</p>
+            </div>
+          )
         )}
       </section>
     </div>

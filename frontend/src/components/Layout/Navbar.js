@@ -1,7 +1,9 @@
 import React from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, NavLink, useNavigate } from 'react-router-dom';
 import useAuth from '../../hooks/useAuth';
 import './Navbar.css';
+
+const navClass = ({ isActive }) => `navbar-item${isActive ? ' is-active' : ''}`;
 
 const Navbar = () => {
   const { currentUser, logout, isAuthenticated, loadingAuth } = useAuth();
@@ -12,52 +14,42 @@ const Navbar = () => {
     navigate('/login');
   };
 
-  if (loadingAuth) {
-    return (
-        <nav className="navbar">
-            <div className="navbar-brand">
-                <Link to="/" className="navbar-item navbar-logo">WebShop</Link>
-            </div>
-            <div className="navbar-menu">
-                <div className="navbar-end"><span className="navbar-item">Loading...</span></div>
-            </div>
-        </nav>
-    );
-  }
-
   return (
-    <nav className="navbar">
-      <div className="navbar-brand">
-        <Link to="/" className="navbar-item navbar-logo">WebShop</Link>
-      </div>
-      <div className="navbar-menu">
-        <div className="navbar-start">
-            <span className="navbar-item">Hello, {currentUser?.username || 'User'}!</span>
+    <header className="navbar">
+      <div className="navbar-inner">
+        <Link to="/" className="navbar-logo">
+          <span className="navbar-mark" aria-hidden="true">W</span>
+          <span>WebShop</span>
+        </Link>
+        {loadingAuth ? (
+          <span className="navbar-item navbar-muted">Loading...</span>
+        ) : (
+          <nav className="navbar-links" aria-label="Shop">
+            <NavLink to="/" end className={navClass}>Browse</NavLink>
             {isAuthenticated && (
-            <Link to="/add-item" className="navbar-item">Add Item</Link>
-          )}
-          <Link to="/" className="navbar-item">Browse</Link>
-
-        </div>
-        <div className="navbar-end">
-          {isAuthenticated ? (
-            <>
-
-              <Link to="/myitems" className="navbar-item">My Items</Link>
-              <Link to="/my-purchases" className="navbar-item">My Purchases</Link>
-              <Link to="/cart" className="navbar-item">Cart</Link>
-              <Link to="/account" className="navbar-item">My Account</Link>
-              <button onClick={handleLogout} className="navbar-item button is-light">Logout</button>
-            </>
-          ) : (
-            <>
-              <Link to="/login" className="navbar-item">Login</Link>
-              <Link to="/signup" className="navbar-item">Sign Up</Link>
-            </>
-          )}
-        </div>
+              <NavLink to="/add-item" className={navClass}>Add Item</NavLink>
+            )}
+            <div className="navbar-account">
+              {isAuthenticated ? (
+                <>
+                  <span className="navbar-greeting">Hello, {currentUser?.username || 'User'}!</span>
+                  <NavLink to="/myitems" className={navClass}>My Items</NavLink>
+                  <NavLink to="/my-purchases" className={navClass}>My Purchases</NavLink>
+                  <NavLink to="/cart" className={navClass}>Cart</NavLink>
+                  <NavLink to="/account" className={navClass}>My Account</NavLink>
+                  <button type="button" onClick={handleLogout} className="navbar-logout">Logout</button>
+                </>
+              ) : (
+                <>
+                  <NavLink to="/login" className={navClass}>Login</NavLink>
+                  <NavLink to="/signup" className={({ isActive }) => `navbar-item navbar-signup${isActive ? ' is-active' : ''}`}>Sign Up</NavLink>
+                </>
+              )}
+            </div>
+          </nav>
+        )}
       </div>
-    </nav>
+    </header>
   );
 };
 

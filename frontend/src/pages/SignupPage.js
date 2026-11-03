@@ -52,12 +52,12 @@ const SignupPage = () => {
   };
 
   return (
-    <div style={{ maxWidth: '400px', margin: '50px auto', padding: '20px', border: '1px solid #ddd', borderRadius: '8px', backgroundColor: '#fff' }}>
+    <div className="form-card">
       <h2>Sign Up</h2>
       {error && <Notification message={error} type="error" onClose={() => setError('')} />}
       {success && <Notification message={success} type="success" onClose={() => setSuccess('')} />}
       <form onSubmit={handleSubmit}>
-        <div style={{ marginBottom: '15px' }}>
+        <div className="field">
           <label htmlFor="username">Username:</label>
           <input
             type="text"
@@ -69,7 +69,7 @@ const SignupPage = () => {
             disabled={loading}
           />
         </div>
-        <div style={{ marginBottom: '15px' }}>
+        <div className="field">
           <label htmlFor="email">Email:</label>
           <input
             type="email"
@@ -81,7 +81,7 @@ const SignupPage = () => {
             disabled={loading}
           />
         </div>
-        <div style={{ marginBottom: '15px' }}>
+        <div className="field">
           <label htmlFor="password">Password:</label>
           <input
             type="password"
@@ -93,11 +93,11 @@ const SignupPage = () => {
             disabled={loading}
           />
         </div>
-        <button type="submit" className="ui-button" disabled={loading} style={{ width: '100%' }}>
+        <button type="submit" className="ui-button ui-button--block" disabled={loading}>
           {loading ? 'Signing Up...' : 'Sign Up'}
         </button>
       </form>
-      <p style={{ marginTop: '20px', textAlign: 'center' }}>
+      <p className="form-note">
         Already have an account? <Link to="/login">Login</Link>
       </p>
     </div>

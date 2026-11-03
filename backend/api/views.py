@@ -1,4 +1,3 @@
-# backend/api/views.py
 from django.contrib.auth.models import User
 from django.http import HttpResponseRedirect
 from django.urls import reverse
@@ -200,6 +199,40 @@ class CartItemViewSet(viewsets.ModelViewSet):
         return Response({"detail": "Purchase successful! Your items have been processed."}, status=status.HTTP_200_OK)
 
 
+SEED_LISTINGS = [
+    ("Natural Canvas Tote", "A roomy unbleached canvas tote for market runs and everyday carry."),
+    ("Cream Ceramic Mug", "A matte cream mug that holds a full cup of coffee or tea."),
+    ("White Leather Sneakers", "Clean low-top leather sneakers with a cushioned sole."),
+    ("Brass Desk Lamp", "A small brass lamp with a linen shade for a desk or bedside table."),
+    ("Charcoal Over-Ear Headphones", "Matte over-ear headphones for music and quiet work."),
+    ("Terracotta Houseplant", "A compact leafy plant in a classic terracotta pot."),
+    ("Tan Leather Watch", "A simple analog watch on a tan leather strap."),
+    ("Clothbound Hardcover", "A rust-orange clothbound book with a plain cover."),
+    ("Market Day Tote", "A sturdy shopper with long handles and a flat base."),
+    ("Stoneware Coffee Cup", "A thick-walled cup that keeps coffee warm a little longer."),
+    ("Court Leather Trainers", "Bright white trainers meant for daily wear."),
+    ("Linen Shade Lamp", "A warm desk light with a tapered linen shade."),
+    ("Studio Headphones", "Closed-back headphones with a padded band."),
+    ("Potted Leaf Plant", "A small green plant suited to a windowsill."),
+    ("Everyday Analog Watch", "A slim watch with a clear dial and leather strap."),
+    ("Warm Cloth Journal", "A hardcover journal bound in textured cloth."),
+    ("Everyday Carry Tote", "A lightweight canvas bag that folds flat when empty."),
+    ("Matte Breakfast Mug", "A wide mug for coffee, tea, or soup."),
+    ("Clean White Low-Tops", "Minimal leather sneakers with matching laces."),
+    ("Reading Desk Light", "A focused brass lamp for late reading."),
+    ("Matte Listening Headphones", "Comfortable over-ears for long listening sessions."),
+    ("Small Desk Plant", "A tidy potted plant for a shelf or desk."),
+    ("Leather Strap Watch", "An everyday wristwatch with a soft tan strap."),
+    ("Hardcover Reading Book", "A plain cloth hardcover ready for a shelf."),
+    ("Stonewashed Shopper", "A washed canvas tote with reinforced corners."),
+    ("Studio Clay Cup", "A hand-finished cup in a warm off-white glaze."),
+    ("Soft Leather Trainers", "Broken-in looking white sneakers with a light sole."),
+    ("Warm Brass Lamp", "A compact brass lamp that casts a soft pool of light."),
+    ("Quiet Room Headphones", "Over-ear headphones with thick ear cushions."),
+    ("Clay Pot Greenery", "A leafy plant settled in a fired clay pot."),
+]
+
+
 def populate_db_view(request):
     CartItem.objects.all().delete()
     Item.objects.all().delete()
@@ -214,9 +247,13 @@ def populate_db_view(request):
     items_created_count = 0
     for seller_idx, seller in enumerate(users_created[:3]):
         for j in range(1, 11):
-            Item.objects.create(title=f'Sample Item {(seller_idx * 10) + j} by {seller.username}',
-                                description=f'A fantastic description for sample item number {(seller_idx * 10) + j}.',
-                                price=round(10.00 + (j * 1.5) + (seller_idx * 5.25), 2), seller=seller)
+            title, description = SEED_LISTINGS[(seller_idx * 10) + (j - 1)]
+            Item.objects.create(
+                title=title,
+                description=description,
+                price=round(10.00 + (j * 1.5) + (seller_idx * 5.25), 2),
+                seller=seller,
+            )
             items_created_count += 1
     message = (
         f"Database populated successfully! {len(users_created)} users created. {items_created_count} items added by the first 3 users.")

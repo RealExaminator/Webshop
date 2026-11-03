@@ -35,9 +35,9 @@ const LoginPage = () => {
     }
   };
 
-  if (loadingAuth && !isAuthenticated) { // Show loading only if not already authenticated and still checking
+  if (loadingAuth && !isAuthenticated) {
     return (
-      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '80vh' }}>
+      <div className="page-loading">
         Checking authentication...
       </div>
     );
@@ -46,11 +46,11 @@ const LoginPage = () => {
   // Or, we can add an explicit check: if (isAuthenticated) return null; (or redirect immediately)
 
   return (
-    <div style={{ maxWidth: '400px', margin: '50px auto', padding: '20px', border: '1px solid #ddd', borderRadius: '8px', backgroundColor: '#fff' }}>
+    <div className="form-card">
       <h2>Login</h2>
       {error && <Notification message={error} type="error" onClose={() => setError('')} />}
       <form onSubmit={handleSubmit}>
-        <div style={{ marginBottom: '15px' }}>
+        <div className="field">
           <label htmlFor="username">Username:</label>
           <input
             type="text"
@@ -62,7 +62,7 @@ const LoginPage = () => {
             disabled={loading}
           />
         </div>
-        <div style={{ marginBottom: '15px' }}>
+        <div className="field">
           <label htmlFor="password">Password:</label>
           <input
             type="password"
@@ -74,11 +74,11 @@ const LoginPage = () => {
             disabled={loading}
           />
         </div>
-        <button type="submit" className="ui-button" disabled={loading} style={{ width: '100%' }}>
+        <button type="submit" className="ui-button ui-button--block" disabled={loading}>
           {loading ? 'Logging in...' : 'Login'}
         </button>
       </form>
-      <p style={{ marginTop: '20px', textAlign: 'center' }}>
+      <p className="form-note">
         Don't have an account? <Link to="/signup">Sign Up</Link>
       </p>
     </div>

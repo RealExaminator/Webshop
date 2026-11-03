@@ -65,25 +65,25 @@ const ChangePasswordPage = () => {
   };
 
   return (
-    <div style={{ maxWidth: '500px', margin: '50px auto', padding: '20px', border: '1px solid #ddd', borderRadius: '8px', backgroundColor: '#fff' }}>
+    <div className="form-card">
       <h2>Change Password</h2>
       {error && <Notification message={error} type="error" onClose={() => setError('')} />}
       {success && <Notification message={success} type="success" onClose={() => setSuccess('')} />}
       <form onSubmit={handleSubmit}>
-        <div style={{ marginBottom: '15px' }}>
+        <div className="field">
           <label htmlFor="oldPassword">Old Password:</label>
           <Input type="password" id="oldPassword" value={oldPassword} onChange={(e) => setOldPassword(e.target.value)} required disabled={loading} />
         </div>
-        <div style={{ marginBottom: '15px' }}>
+        <div className="field">
           <label htmlFor="newPassword">New Password:</label>
           <Input type="password" id="newPassword" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} required disabled={loading} />
         </div>
-        <div style={{ marginBottom: '20px' }}>
+        <div className="field">
           <label htmlFor="confirmNewPassword">Confirm New Password:</label>
           <Input type="password" id="confirmNewPassword" value={confirmNewPassword} onChange={(e) => setConfirmNewPassword(e.target.value)} required disabled={loading} />
         </div>
-        <Button type="submit" disabled={loading} className="ui-button" style={{ width: '100%' }}>
-          {loading ? <LoadingSpinner /> : 'Change Password'}
+        <Button type="submit" disabled={loading} className="ui-button--block">
+          {loading ? <LoadingSpinner inline /> : 'Change Password'}
         </Button>
       </form>
     </div>

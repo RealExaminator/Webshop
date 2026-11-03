@@ -9,7 +9,7 @@ const ProtectedRoute = ({ children }) => {
 
   if (loadingAuth) {
     return (
-      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '80vh' }}>
+      <div className="page-loading">
         <LoadingSpinner />
       </div>
     );

@@ -1,11 +1,11 @@
 import React from 'react';
 
-const Button = ({ children, onClick, type = 'button', className = '' }) => {
+const Button = ({ children, className = '', type = 'button', ...rest }) => {
   return (
-    <button type={type} onClick={onClick} className={`ui-button ${className}`}>
+    <button type={type} className={['ui-button', className].filter(Boolean).join(' ')} {...rest}>
       {children}
     </button>
   );
 };
-// Add some basic styling in App.css or index.css for .ui-button
+
 export default Button;

@@ -1,4 +1,3 @@
-// frontend/src/pages/AddItemPage.js
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import ItemService from '../services/item.service';
@@ -55,12 +54,12 @@ const AddItemPage = () => {
   };
 
   return (
-    <div style={{ maxWidth: '600px', margin: '50px auto', padding: '20px', border: '1px solid #ddd', borderRadius: '8px', backgroundColor: '#fff' }}>
+    <div className="form-card form-card--wide">
       <h2>Add New Item for Sale</h2>
       {error && <Notification message={error} type="error" onClose={() => setError('')} />}
       {success && <Notification message={success} type="success" onClose={() => setSuccess('')} />}
       <form onSubmit={handleSubmit}>
-        <div style={{ marginBottom: '15px' }}>
+        <div className="field">
           <label htmlFor="title">Title:</label>
           <Input // Using your UI component
             type="text"
@@ -71,20 +70,19 @@ const AddItemPage = () => {
             disabled={loading}
           />
         </div>
-        <div style={{ marginBottom: '15px' }}>
+        <div className="field">
           <label htmlFor="description">Description:</label>
           <textarea
             id="description"
-            className="ui-input" // Assuming ui-input class works for textarea too or create separate styling
+            className="ui-input"
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             rows="4"
             required
             disabled={loading}
-            style={{width: '100%', padding: '10px', border: '1px solid #ccc', borderRadius: '4px', fontSize: '1rem'}}
           />
         </div>
-        <div style={{ marginBottom: '15px' }}>
+        <div className="field">
           <label htmlFor="price">Price ($):</label>
           <Input // Using your UI component
             type="number"
@@ -97,8 +95,8 @@ const AddItemPage = () => {
             disabled={loading}
           />
         </div>
-        <Button type="submit" disabled={loading} className="ui-button" style={{ width: '100%' }}>
-          {loading ? <LoadingSpinner /> : 'Add Item'}
+        <Button type="submit" disabled={loading} className="ui-button--block">
+          {loading ? <LoadingSpinner inline /> : 'Add Item'}
         </Button>
       </form>
     </div>

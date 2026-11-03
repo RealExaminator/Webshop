@@ -1,11 +1,8 @@
-// frontend/src/pages/PurchasesPage.js
 import React, { useState, useEffect, useCallback } from 'react';
 import ItemService from '../services/item.service';
 import LoadingSpinner from '../components/UI/LoadingSpinner';
 import Notification from '../components/UI/Notification';
-import ItemList from '../components/Items/ItemList'; // Re-using ItemList for display
-// Or if you have a specific MyItems component for purchases:
-// import PurchasedItemsList from '../components/Items/PurchasedItemsList';
+import ItemList from '../components/Items/ItemList';
 
 
 const PurchasesPage = () => {
@@ -35,16 +32,20 @@ const PurchasesPage = () => {
   if (loading) return <LoadingSpinner />;
 
   return (
-    <div>
-      <h2>My Purchased Items</h2>
+    <div className="page">
+      <header className="page-header">
+        <h2>My Purchased Items</h2>
+      </header>
       {error && <Notification message={error} type="error" onClose={() => setError('')} />}
 
       {purchasedItems.length > 0 ? (
         <ItemList items={purchasedItems} />
-        // For purchased items, the ItemCard should ideally show 'Purchased on [date]' and 'From: [seller_username]'
-        // You might need to adapt ItemCard or create a new component for this view.
       ) : (
-        !error && <p>You have not purchased any items yet.</p>
+        !error && (
+          <div className="empty-state">
+            <p>You have not purchased any items yet.</p>
+          </div>
+        )
       )}
     </div>
   );

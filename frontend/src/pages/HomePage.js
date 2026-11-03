@@ -50,19 +50,21 @@ const HomePage = () => {
   };
 
   return (
-    <div>
-      <h1>Items for Sale</h1>
-      <form onSubmit={handleSearchSubmit} style={{ display: 'flex', alignItems: 'center', marginBottom: '20px', gap: '10px' }}>
+    <div className="page">
+      <header className="page-header">
+        <h1>Items for Sale</h1>
+      </header>
+      <form className="search-bar" onSubmit={handleSearchSubmit}>
         <Input
           type="text"
           placeholder="Search items by title..."
           value={searchTerm}
           onChange={handleSearchInputChange}
-          style={{ flexGrow: 1 }}
+          aria-label="Search items by title"
         />
-        <Button type="submit" className="ui-button">Search</Button>
+        <Button type="submit">Search</Button>
         {currentQuery && (
-          <Button type="button" onClick={handleClearSearch} className="ui-button" style={{backgroundColor: '#6c757d'}}>
+          <Button type="button" onClick={handleClearSearch} className="ui-button--muted">
             Clear
           </Button>
         )}
@@ -74,14 +76,21 @@ const HomePage = () => {
         <LoadingSpinner />
       ) : items.length > 0 ? (
         <>
-          {currentQuery && <p>Showing results for: "<strong>{currentQuery}</strong>"</p>}
+          {currentQuery && <p className="search-summary">Showing results for: "<strong>{currentQuery}</strong>"</p>}
           <ItemList items={items} />
         </>
       ) : (
         currentQuery ? (
-          <p>No items found matching "<strong>{currentQuery}</strong>". <Button type="button" onClick={handleClearSearch} className="ui-button">Show all items</Button></p>
+          <div className="empty-state">
+            <p>No items found matching "<strong>{currentQuery}</strong>".</p>
+            <Button type="button" onClick={handleClearSearch}>Show all items</Button>
+          </div>
         ) : (
-          !error && <p>No items currently for sale.</p>
+          !error && (
+            <div className="empty-state">
+              <p>No items currently for sale.</p>
+            </div>
+          )
         )
       )}
     </div>

@@ -1,6 +1,5 @@
-// frontend/src/pages/CartPage.js
 import React, { useState, useEffect, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import CartService from '../services/cart.service';
 import LoadingSpinner from '../components/UI/LoadingSpinner';
 import Notification from '../components/UI/Notification';
@@ -137,30 +136,36 @@ const CartPage = () => {
   if (loading && !paying) return <LoadingSpinner />;
 
   return (
-    <div>
-      <h2>Your Shopping Cart</h2>
+    <div className="page">
+      <header className="page-header">
+        <h2>Your Shopping Cart</h2>
+      </header>
       {error && <Notification message={error} type="error" onClose={() => setError('')} />}
       {payFeedback.message && <Notification message={payFeedback.message} type={payFeedback.type} onClose={() => setPayFeedback({ message: '', type: '' })} />}
 
       {cartItems.length === 0 && !paying ? (
-        <p>Your cart is empty.</p>
+        <div className="empty-state">
+          <p>Your cart is empty.</p>
+          <Link to="/" className="ui-button">Browse</Link>
+        </div>
       ) : (
-        <>
-          {cartItems.map(cartItem => (
-            <CartItem
-              key={cartItem.id}
-              cartItemData={cartItem}
-              onRemove={() => handleRemoveItem(cartItem.id)}
-            />
-          ))}
-          <hr style={{ margin: '20px 0' }}/>
-          <div style={{ textAlign: 'right', marginTop: '20px' }}>
-            <h3>Total: ${calculateTotal()}</h3>
-            <Button onClick={handlePay} className="ui-button" disabled={cartItems.length === 0 || paying}>
-              {paying ? <LoadingSpinner /> : 'Pay Now'}
-            </Button>
+        <div className="cart-layout">
+          <div>
+            {cartItems.map(cartItem => (
+              <CartItem
+                key={cartItem.id}
+                cartItemData={cartItem}
+                onRemove={() => handleRemoveItem(cartItem.id)}
+              />
+            ))}
           </div>
-        </>
+          <aside className="cart-summary">
+            <h3>Total: ${calculateTotal()}</h3>
+            <Button onClick={handlePay} className="ui-button--block" disabled={cartItems.length === 0 || paying}>
+              {paying ? <LoadingSpinner inline /> : 'Pay Now'}
+            </Button>
+          </aside>
+        </div>
       )}
     </div>
   );
